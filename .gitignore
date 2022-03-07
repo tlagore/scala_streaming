@@ -88,3 +88,4 @@ Vagrantfile
 # personal ignores
 *.pdf
 data/*
+project/*
