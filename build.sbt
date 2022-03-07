@@ -1,10 +1,12 @@
-scalaVersion := "2.12.8"
+// The simplest possible sbt build file is just one line:
 
-name := "minhash"
-scalacOptions ++= Seq("-language:implicitConversions", "-deprecation")
+scalaVersion := "2.13.3"
 
-//libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+scalacOptions ++= Seq("-unchecked", "-deprecation")
 
-libraryDependencies ++= Seq(
-  ("org.apache.spark" %% "spark-core" % "2.4.3")
-)
+name := "streams"
+organization := "ca.uvic"
+version := "1.0"
+
+libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+
