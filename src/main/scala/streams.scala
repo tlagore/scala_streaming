@@ -2,6 +2,15 @@ import scala.collection.mutable.BitSet
 
 package streams {
 
+  /*
+    case class Filter_Parms(
+    nItemsSeen:Int, // number of items used to create the filter
+    nBits:Int, // number of bits used in the filter
+    nHashes:Int, // number of hashing functions used by the filter
+    filter:BitSet   // the actual bitset
+  )
+   */
+
   class Bloom_Filter (fileName: String,
     falsePositiveRate: Double,
     hashes: List[Hash_Function]) {
@@ -9,12 +18,39 @@ package streams {
     // leave this unchanged
     val bloomFilter : BitSet = BitSet()
 
-    def parameters(): Filter_Parms = ???
+    private val m = scala.io.Source.fromFile(fileName).getLines
+      .foldLeft(0)((acc, _) => acc+1)
 
-    // your code goes here
+    private def calculate_optimal_hashes(falsePositiveRate: Double, numEls: Int): Double = {
+      // optimal k = ln(p) / ln(1-e^-ln(2))
+      math.ceil(math.log(falsePositiveRate) / math.log(1-math.pow(math.E, -math.log(2))))
+    }
 
-    def in(v:String):Boolean = ???
+    private def calculate_optimal_buckets(numHashes: Int, numEls: Int): Double = {
+      // optimal k = ln(p) / ln(1-e^-ln(2))
+      math.ceil(utils.truncate((numHashes*numEls)/math.log(2), 7))
+    }
 
+    private val k = calculate_optimal_hashes(falsePositiveRate, m).toInt
+    private val n = calculate_optimal_buckets(k, m).toInt
+
+    private val lineIter = scala.io.Source.fromFile(fileName).getLines()
+    private val hashesToUse = hashes.take(k)
+
+    lineIter.foreach(element => {
+      hashesToUse.foreach(hash => {
+        val bucket = hash(element) % n
+        bloomFilter.add(bucket)
+      })
+    })
+
+    println(s"m=$m  k=$k and n=$n")
+
+    def parameters(): Filter_Parms = Filter_Parms(m, n, k, bloomFilter)
+
+    def in(v:String):Boolean = {
+      hashesToUse.forall(hash => bloomFilter(hash(v) % n))
+    }
   }
  
   class Flajolet_Martin(
