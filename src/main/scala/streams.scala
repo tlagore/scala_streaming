@@ -183,8 +183,8 @@ package streams {
       val initialSample: Vector[Int] = sampleWithIndex.map(_._1).toVector
 
       // initial query on first sizeSample samples
-      queries.foreach(_(initialSample,sizeSample))
-//
+      queries.foreach(_(initialSample, sizeSample))
+
       // index + 1 since zipWithIndex is 0 based
       stream.filter({
         case (_, index) =>
@@ -193,8 +193,6 @@ package streams {
       {
         case(sample, (element, curSample)) =>
           val index = r.nextInt(sizeSample)
-
-//            (r.nextDouble()*sizeSample).toInt
 
           // replace vector index
           val newSample: Vector[Int] = sample.zipWithIndex.map {
@@ -205,17 +203,6 @@ package streams {
           newSample
       }
     }
-
-      // remember that the algorithm assumes
-      // that the position of the element in the stream
-      // starts at zero (not 1)
-      // thus is the stream is 10,20,30
-      // element 1 is 10, element 2 is 20 and element 3 is 30
-
-      // use r.nextDouble to generate a random number between [0,1)
-      // use r.nextInt(n) to generate a number between 0 and n-1
-
-
   }
 
 }
