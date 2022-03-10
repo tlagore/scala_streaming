@@ -20,12 +20,18 @@ object FilterMain extends App {
     throw new IllegalArgumentException(s"False positive rate (arg2) must be between 0 and 1")
   }
   val filter = new Bloom_Filter(filename, falsePositiveRate, utils.hashes)
-  println(filter.in("hello"))
-  println(filter.in("there"))
-  println(filter.in("these"))
-  println(filter.in("are"))
-  println(filter.in("my"))
-  println(filter.in("elements"))
+
+  val (numMatched, count) = my_utils.getLines(filename).foldLeft((0,0)) {
+    case ((numMatched, count), line) =>
+      if (filter.in(line))
+        (numMatched + 1, count + 1)
+      else
+        (numMatched, count+1)
+  }
+
+  println(s"numMatched: $numMatched -- count: $count")
+
+  println("doing random tests")
   val numberTests = 1000000
   val falsePositives = (1 to numberTests).foldLeft(0)((falsePositives, _) => {
     val str = createRandomString(random.nextInt(15)+1)
