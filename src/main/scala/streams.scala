@@ -2,8 +2,6 @@ import scala.collection.mutable.BitSet
 
 package streams {
 
-  import scala.annotation.tailrec
-
   object my_utils {
     def getLines(filename:String):Iterator[String] =
     {
@@ -104,7 +102,7 @@ package streams {
      * @param length recursive parameter, should not be set
      * @return tailLength of n
      */
-    @tailrec
+    @scala.annotation.tailrec
     private def tailLength(n:Int, bitType: Int, length: Int = 0): Int = {
       // if the value is 0, the element hashed to exactly 0 (after masking)
       if (n == 0)
