@@ -22,12 +22,13 @@ object FilterMain extends App {
   }
 
   // process arguments
-  if (args.size != 1) {
+  if (args.length != 1) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Required arguments: <data_path>")
+    throw new IllegalArgumentException(s"Required arguments: <data_directory>")
   }
+
   val data_path = args(0)
-  val testFiles = new java.io.File("data/").listFiles.filter(_.isFile)
+  val testFiles = new java.io.File(data_path).listFiles.filter(_.isFile)
 
   val minFalsePos = 0.03
   val maxFalsePos = 0.15
@@ -66,7 +67,7 @@ object FilterMain extends App {
     println(s"$falsePositives false positives, FP rate for tests: ${actualFalsePositiveRate}, Specified filter false positive rate: ${falsePositiveRate}")
 
     // Ensure our actual false positive is no more than 5% higher than specified positive rate
-    // unless it's a small file filter, then it may have up to 8% more false positives
+    // unless it's a small filter, then it may have up to 8% more false positives
     val wiggleRoom = if (count < 100) 0.08 else 0.05
     assert(actualFalsePositiveRate < (falsePositiveRate + wiggleRoom))
   })

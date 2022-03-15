@@ -7,20 +7,26 @@ object SampleMain extends App {
     println(s"Current sample: $sample")
   }
 
-  def printSamples(sample: Vector[Int], curElement: Int): Unit = {
-    printSampleNumber(curElement)
-    println(s"Elements: $sample")
+  var lastSample = Vector[Int]()
+  def verifySamples(sample: Vector[Int], curElement: Int): Unit = {
+    if (lastSample.length == 0)
+      lastSample = sample
+    else {
+      val diff = lastSample.diff(sample)
+      println(diff)
+      assert(diff.length == 1)
+      lastSample = sample
+    }
   }
 
   def averages(sample: Vector[Int], curElement: Int): Unit = {
     println(s"avg: ${sample.sum / sample.length}")
-    Thread.sleep(1000)
   }
 
   // process arguments
-  if (args.size != 2) {
+  if (args.length != 2) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Arguments missing <filename> <delimiter> <relativeSupportThreshold> [limit] ")
+    throw new IllegalArgumentException(s"Arguments missing <filename> <sample size>")
   }
   val filename = args(0)
   val sizeSample = args(1).toInt
@@ -34,5 +40,5 @@ object SampleMain extends App {
 
   val lines = my_utils.getLines(filename).iterator
 
-  reservoirSample.process(lines.map(_.toInt), sizeSample, rand, List[Standing_Query](printSamples, averages))
+  reservoirSample.process(lines.map(_.toInt), sizeSample, rand, List[Standing_Query](verifySamples, averages))
 }

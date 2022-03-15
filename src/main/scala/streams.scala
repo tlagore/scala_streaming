@@ -121,17 +121,7 @@ package streams {
 
     println(s"Bitmask is: $bitMask")
 
-    println("Loading hashes...")
-    // your code goes here
-
-//    val hashCounts: List[Double] = s// .to[scala.collection.par.immutable.ParVector]
-//      .map(el =>
-//      hashes.map(_(el) & bitMask)
-//        .map(tailLength(_, 0))
-//        .map(math.pow(2, _))
-//    ).reduce((a,b) => a.zip(b).map { case (el1, el2) => math.max(el1,el2) })
-
-    val hashCounts: List[Double] = s.foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
+    val hashCounts: List[Double] = s.to(LazyList).foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
         val newCounts = hashes
           .map(_(el) & bitMask)
           .map(tailLength(_,0))
@@ -141,7 +131,6 @@ package streams {
           case (el1, el2) => math.max(el1,el2)
         }
       })
-    println("Hashes loaded")
 
     /**
      * Summarize the distinct counts by groupSize
