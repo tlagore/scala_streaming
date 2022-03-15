@@ -63,6 +63,8 @@ package streams {
 
     def parameters(): Filter_Parms = Filter_Parms(m, n, k, bloomFilter)
 
+    println(s"n=$n, k=$k, m=$m, false positive = $falsePositiveRate")
+
     /**
      * Check if an element is in the bloom filter.
      *
@@ -121,6 +123,14 @@ package streams {
 
     println("Loading hashes...")
     // your code goes here
+
+//    val hashCounts: List[Double] = s// .to[scala.collection.par.immutable.ParVector]
+//      .map(el =>
+//      hashes.map(_(el) & bitMask)
+//        .map(tailLength(_, 0))
+//        .map(math.pow(2, _))
+//    ).reduce((a,b) => a.zip(b).map { case (el1, el2) => math.max(el1,el2) })
+
     val hashCounts: List[Double] = s.foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
         val newCounts = hashes
           .map(_(el) & bitMask)
@@ -140,23 +150,18 @@ package streams {
      */
     def summarize(groupSize:Int):Double =
     {
-      // textbook says to do it this way
-      val averages = hashCounts.sliding(groupSize, groupSize)
-        .foldLeft(List[Double]())((intermediaryAvg, group) => {
-          intermediaryAvg :+ (group.sum / group.length)
+      // median then avg (as in class), text does avg then median
+      val medians = hashCounts.sliding(groupSize, groupSize)
+        .foldLeft(List[Double]())((intermediaryMedian, group) => {
+          val (l1,l2) = group.sortWith(_ < _).splitAt(group.length/2)
+          if (l1.length == l2.length)
+            intermediaryMedian:+ (l1.last + l2.head) / 2
+          else
+            intermediaryMedian :+ l2.head
         })
 
-      averages.sortWith(_ < _).drop(averages.length/2).head
-
-      // class notes do it this way
-//      val medians = hashCounts.sliding(groupSize, groupSize)
-//        .foldLeft(List[Double]()) ((intermediaryCounts, group) => {
-//          val median = group.sortWith(_ < _).drop(group.length/2).head
-//          intermediaryCounts :+ median
-//        })
-//      medians.sum / medians.length
+      medians.sum / medians.length
     }
-      // can drop the count after using it in the foldLeft
   }
 
   /**
