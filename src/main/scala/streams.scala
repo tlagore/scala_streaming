@@ -1,5 +1,11 @@
 import scala.collection.mutable.BitSet
-import scala.collection.parallel.CollectionConverters._
+
+
+/* This import is not used because assignment specs say we can't import
+anything, but uncomment it if you want to
+test the parallelized version (mucho zoom)
+*/
+// import scala.collection.parallel.CollectionConverters._
 
 package streams {
 
@@ -126,22 +132,32 @@ package streams {
       }
     }
 
-    private[this] val hashCounts: List[Double] = s.sliding(150,150).to(LazyList).par.map(s => {
-      s.map(el => {
-        hashes.map(_ (el) & bitMask)
-          .map(tailLength(_, 0))
-          .map(math.pow(2, _))
-      }).fold(List.fill(hashes.length)(0.0))(reduceHashes)
-    }).reduce(reduceHashes)
+    // ---------------------------------------------------------------------------------
+    // if you want to test the parallelized version, uncomment this code and the import
+    // at the top of the file, and comment out the next code chunk
+    // ---------------------------------------------------------------------------------
 
-//    private[this] val hashCounts: List[Double] = s.foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
-//        val newCounts = hashes
-//          .map(_(el) & bitMask)
-//          .map(tailLength(_,0))
+    // parallelized version, not allowed due to assignment specs saying no import
+//    private[this] val hashCounts: List[Double] = s.sliding(150,150).to(LazyList).par.map(s => {
+//      s.map(el => {
+//        hashes.map(_ (el) & bitMask)
+//          .map(tailLength(_, 0))
 //          .map(math.pow(2, _))
-//
-//        reduceHashes(curCounts, newCounts)
-//      })
+//      }).fold(List.fill(hashes.length)(0.0))(reduceHashes)
+//    }).reduce(reduceHashes)
+
+    // ---------------------------------------------------------------------------------
+    // if you want to test the parallelized version, comment out this block and uncomment
+    // the above block and import at the top of the file
+    // ---------------------------------------------------------------------------------
+    private[this] val hashCounts: List[Double] = s.foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
+        val newCounts = hashes
+          .map(_(el) & bitMask)
+          .map(tailLength(_,0))
+          .map(math.pow(2, _))
+
+        reduceHashes(curCounts, newCounts)
+      })
 
     /**
      * Summarize the distinct counts by groupSize
@@ -182,14 +198,13 @@ package streams {
       r: scala.util.Random,
       queries: List[Standing_Query]
     ): Unit = {
-
-
       // your code goes here
       val (sampleWithIndex, stream) = s.zipWithIndex.splitAt(sizeSample)
       val initialSample: Vector[Int] = sampleWithIndex.map(_._1).toVector
 
       // initial query on first sizeSample samples
-      queries.foreach(_(initialSample, sizeSample))
+      if (initialSample.nonEmpty)
+        queries.foreach(_(initialSample, initialSample.length))
 
       // index + 1 since zipWithIndex is 0 based
       stream.filter({

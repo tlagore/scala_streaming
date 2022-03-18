@@ -39,48 +39,47 @@ object FilterMain extends App {
     val falsePositiveRate = random.nextDouble() * (maxFalsePos-minFalsePos)+minFalsePos
     val filter = new Bloom_Filter(filename, falsePositiveRate, utils.hashes)
 
-    val (numMatched, count) = my_utils.getLines(filename).foldLeft((0, 0)) {
-      case ((numMatched, count), line) =>
-        if (filter.in(line))
-          (numMatched + 1, count + 1)
-        else
-          (numMatched, count + 1)
-    }
+    // using a var to share variable between tests
+    var fileCount = 0
+    TestUtils.runTest(s"Testing $filename, same file passes filter",
+      () => {
+        val (numMatched, count) = my_utils.getLines(filename).foldLeft((0, 0)) {
+          case ((numMatched, count), line) =>
+            if (filter.in(line))
+              (numMatched + 1, count + 1)
+            else
+              (numMatched, count + 1)
+        }
+
+        fileCount = count
+        assert(numMatched == count, s"Assert 100% correct rate on same file failed. number that passed: $numMatched, expected $count")
+      })
+
 
     // ensure we have 100% correct rate for elements in the file
-    assert(numMatched == count)
+    TestUtils.runTest(s"Testing $filename, randomly generated values approach expected false positive rate",
+      () =>{
+        val numberTests = 1000000
+        val falsePositives = (1 to numberTests).foldLeft(0)((falsePositives, _) => {
+          // +1 on string size so we don't have 0 length string
+          val str = if (random.nextDouble < 0.5) createRandomString(random.nextInt(35) + 1) else createRandomInt(random.nextInt(35) + 1)
+          if (filter.in(str))
+            falsePositives + 1
+          else
+            falsePositives
+        })
 
-    println(s"numMatched: $numMatched -- count: $count")
+        val actualFalsePositiveRate = falsePositives.toDouble / numberTests
+        println(s"$falsePositives false positives, FP rate for tests: ${actualFalsePositiveRate}, Specified filter false positive rate: ${falsePositiveRate}")
 
-    println("doing random tests")
-    val numberTests = 1000000
-    val falsePositives = (1 to numberTests).foldLeft(0)((falsePositives, _) => {
-      // +1 on string size so we don't have 0 length string
-      val str = if (random.nextDouble < 0.5) createRandomString(random.nextInt(35) + 1) else createRandomInt(random.nextInt(35) + 1)
-      if (filter.in(str))
-        falsePositives + 1
-      else
-        falsePositives
-    })
-
-    val actualFalsePositiveRate = falsePositives.toDouble / numberTests
-    println(s"$falsePositives false positives, FP rate for tests: ${actualFalsePositiveRate}, Specified filter false positive rate: ${falsePositiveRate}")
-
-    // Ensure our actual false positive is no more than 5% higher than specified positive rate
-    // unless it's a small filter, then it may have up to 8% more false positives
-    val wiggleRoom = if (count < 100) 0.08 else 0.05
-    assert(actualFalsePositiveRate < (falsePositiveRate + wiggleRoom))
+        // Ensure our actual false positive is no more than 8% higher than specified positive rate
+        // unless it's a small filter, then it may have up to 10% more false positives
+        val wiggleRoom = if (fileCount < 100) 0.10 else 0.08
+        assert(actualFalsePositiveRate < (falsePositiveRate + wiggleRoom), s"False positive test failed. " +
+          s"Test false positive: $actualFalsePositiveRate, should have been less than ${falsePositiveRate + wiggleRoom} " +
+          s"with parameter falsePositiveRate of $falsePositiveRate")
+      })
   })
 
-  println("testing data/test-movies.txt against data/4096.ints")
-  val filter = new Bloom_Filter("data/test-movies.txt", 0.05, utils.hashes)
-  val lines = my_utils.getLines("data/4096.ints")
-  val (count, falsePositives) = lines.foldLeft((0,0))((accu, line) => {
-    if (filter.in(line))
-      (accu._1 + 1, accu._2 + 1)
-    else
-      (accu._1 + 1, accu._2)
-  })
-
-  println(s"Tested test-movies against 4096.ints. False positives: $falsePositives. %${(falsePositives.toDouble / count)*100}")
+  println("Bloom Filter: All tests passed.")
 }

@@ -1,16 +1,27 @@
 package streams
 
+object TestUtils {
+  def runTest(testMsg: String, test: () => Unit): Unit = {
+    println("--------------------")
+    println(testMsg)
+    test()
+    println("Test passed.")
+    println("--------------------")
+  }
+}
+
 object SampleMain extends App {
+
   // process arguments
-  if (args.length != 2) {
+  if (args.length != 1) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Arguments missing <filename> <sample size>")
+    throw new IllegalArgumentException(s"Arguments missing <data_directory>")
   }
-  val filename = args(0)
-  val sizeSample = args(1).toInt
-  if (sizeSample < 0) {
-    throw new IllegalArgumentException(s"sizeSample (arg2) must be between > 0")
-  }
+  val data_dir: String = args(0)
+  val dirFile = new java.io.File(data_dir)
+
+  assert(dirFile.exists(), s"The supplied data directory: '$data_dir' does not exist.")
+  assert(dirFile.isDirectory, s"The supplied data directory: '$data_dir' is not a directory")
 
   // expects numbers < 0. checks tolerance close to decimal place
   def fuzzyEquals(a: Double, b:Double): Boolean = {
@@ -36,12 +47,11 @@ object SampleMain extends App {
 
     val larger = math.max(realAverage, sampleAverage)
     val smaller = math.min(realAverage, sampleAverage)
-    // should be within 15% of real average
-    val comp = larger*0.85
+    // should be within 20% of real average
+    val comp = larger*0.80
 
-    // \r to not spam the output
-    print(s"Real Average: $realAverage, Sample average: $sampleAverage \r")
-    assert(smaller >= comp)
+//    println(s"Real Average: $realAverage, Sample average: $sampleAverage")
+    assert(smaller >= comp, s"Average test failed. Expected $smaller >= $comp. Real average: $realAverage. Sample average: $sampleAverage")
 
     // we also know that in this stream, the most recent element is just the index, so the sample *must* contain
     // curElementCount
@@ -50,6 +60,8 @@ object SampleMain extends App {
 
   var lastElementCount = 0
   var lastSample = Vector[Int]()
+  val sizeSample = 100
+
   def verifySamples(sample: Vector[Int], curElementCount: Int): Unit = {
     if (lastSample.isEmpty) {
       lastSample = sample
@@ -58,42 +70,66 @@ object SampleMain extends App {
       val diff = lastSample.diff(sample)
 
       // should only be one different element in this sample from last sample
-      assert(diff.length == 1)
+      assert(diff.length == 1, s"Single different element test failed. Expected diff.length == 1 but got ${diff.length}")
 
       // samples happen with increasing rarity,
       // this test checks to see that the probability we sampled this item
       // and the distance between samples is related (with some tolerance for randomness)
       val estimatedChance = 1/(curElementCount - lastElementCount).toFloat
       val chance = sizeSample.toFloat / curElementCount
-      assert(fuzzyEquals(chance, estimatedChance))
+      assert(fuzzyEquals(chance, estimatedChance), s"Fuzzy equals of sample chance failed. True chance: $chance, estimated chance: $estimatedChance")
       lastElementCount = curElementCount
       lastSample = sample
     }
   }
 
+  var dummyFuncCount = 0
   def dummyFunc(sample: Vector[Int], curElement: Int): Unit = {
-    print(s"I don't do anything but ensure it calls all the functions in the list $curElement \r")
+    dummyFuncCount += 1
   }
 
   private val PRIME =  4294967311L
   // seed the  random number generator, so we have reproducible results
   private val rand = new scala.util.Random(PRIME)
 
-  val lines = my_utils.getLines(filename).iterator
+  val filenames: List[String] = List[String](data_dir + "/movies.ints", data_dir + "/4096.ints")
 
-  reservoirSample.process(lines.map(_.toInt), sizeSample, rand, List[Standing_Query](verifySamples, dummyFunc))
+  filenames.foreach(filename => {
+    val lines = my_utils.getLines(filename).iterator
 
-  reservoirSample.process((1 to 400000).iterator, 100, rand, List[Standing_Query](testAutoIncrementStream))
+    TestUtils.runTest("Testing stream sampling sanity and multiple standing queries. File: " +
+      s"${filename}",
+      () => reservoirSample.process(lines.map(_.toInt), sizeSample, rand, List[Standing_Query](verifySamples, dummyFunc)))
 
-  var count = 0
-  // test that a sample of sample size is the whole list
+    // reset test mutables
+    lastElementCount = 0
+    lastSample = Vector[Int]()
+  })
+
+  (1 to 30).foreach(c => {
+    TestUtils.runTest(s"Testing stream average sanity on auto-incrementing stream. test $c of 30",
+      () => reservoirSample.process((1 to 400000).iterator, 150, rand, List[Standing_Query](testAutoIncrementStream)))
+  })
+
+  // test that a sample of sample size is the whole list (iterator is smaller than sample size)
   // function should only be called once
-  reservoirSample.process((1 to 10).iterator, 10, rand, List[Standing_Query](
-      (sample, sampleCount) => {
-        assert(sampleCount == 10)
-        assert(sample.equals(1 to 10))
-        assert(count == 0)
-        count = count + 1
-      })
-  )
+  TestUtils.runTest("Testing small sample sizes",
+    () => {
+      var count = 0
+      reservoirSample.process((1 to 9).iterator, 10, rand, List[Standing_Query](
+        (sample, sampleCount) => {
+          assert(sampleCount == 9, s"Assert sample count on small sample failed. Expected sampleCount == 9, but got $sampleCount")
+          assert(sample.equals(1 to 9), s"Assert sample format on small sample failed. " +
+            s"Expected sample == ${1 to 9}, but got $sample")
+          assert(count == 0, s"Assert only one call on small sample failed. This query should have only been called once.")
+          count = count + 1
+        }))
+    })
+
+  TestUtils.runTest("Testing empty iterator",
+    () => reservoirSample.process(List().iterator, sizeSample=10, rand, List[Standing_Query](
+      (_, _) => assert(false, "This function should not have been called")
+    )))
+
+  println("Reservoir Sampling: All tests passed.")
 }
