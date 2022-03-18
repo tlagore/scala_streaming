@@ -8,5 +8,8 @@ name := "streams"
 organization := "ca.uvic"
 version := "1.0"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+libraryDependencies ++= Seq(
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4"
+)
 

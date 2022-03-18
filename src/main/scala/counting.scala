@@ -1,7 +1,5 @@
 package streams
 
-import scala.io.Source
-
 object CountingMain extends App {
   // process arguments
   if (args.size != 2) {
@@ -37,6 +35,7 @@ object CountingMain extends App {
     val lines = my_utils.getLines(file.getAbsolutePath).iterator
     println("Loading hashes...")
     val flajolet_Martin = new Flajolet_Martin(lines, numBits, utils.hashes)
+
     println(s"Hashes loaded. Took ${(System.currentTimeMillis() - now) / 1000} seconds.")
 
     val flaj_summary = flajolet_Martin.summarize(10)

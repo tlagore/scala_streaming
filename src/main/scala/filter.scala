@@ -71,4 +71,16 @@ object FilterMain extends App {
     val wiggleRoom = if (count < 100) 0.08 else 0.05
     assert(actualFalsePositiveRate < (falsePositiveRate + wiggleRoom))
   })
+
+  println("testing data/test-movies.txt against data/4096.ints")
+  val filter = new Bloom_Filter("data/test-movies.txt", 0.05, utils.hashes)
+  val lines = my_utils.getLines("data/4096.ints")
+  val (count, falsePositives) = lines.foldLeft((0,0))((accu, line) => {
+    if (filter.in(line))
+      (accu._1 + 1, accu._2 + 1)
+    else
+      (accu._1 + 1, accu._2)
+  })
+
+  println(s"Tested test-movies against 4096.ints. False positives: $falsePositives. %${(falsePositives.toDouble / count)*100}")
 }

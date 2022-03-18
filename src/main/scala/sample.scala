@@ -39,7 +39,8 @@ object SampleMain extends App {
     // should be within 15% of real average
     val comp = larger*0.85
 
-    println(s"Real Average: $realAverage, Sample average: $sampleAverage")
+    // \r to not spam the output
+    print(s"Real Average: $realAverage, Sample average: $sampleAverage \r")
     assert(smaller >= comp)
 
     // we also know that in this stream, the most recent element is just the index, so the sample *must* contain
@@ -71,7 +72,7 @@ object SampleMain extends App {
   }
 
   def dummyFunc(sample: Vector[Int], curElement: Int): Unit = {
-    println("I don't do anything but ensure it calls all the functions in the list")
+    print(s"I don't do anything but ensure it calls all the functions in the list $curElement \r")
   }
 
   private val PRIME =  4294967311L
@@ -83,4 +84,16 @@ object SampleMain extends App {
   reservoirSample.process(lines.map(_.toInt), sizeSample, rand, List[Standing_Query](verifySamples, dummyFunc))
 
   reservoirSample.process((1 to 400000).iterator, 100, rand, List[Standing_Query](testAutoIncrementStream))
+
+  var count = 0
+  // test that a sample of sample size is the whole list
+  // function should only be called once
+  reservoirSample.process((1 to 10).iterator, 10, rand, List[Standing_Query](
+      (sample, sampleCount) => {
+        assert(sampleCount == 10)
+        assert(sample.equals(1 to 10))
+        assert(count == 0)
+        count = count + 1
+      })
+  )
 }
