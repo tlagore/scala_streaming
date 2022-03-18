@@ -34,16 +34,13 @@ object CountingMain extends App {
               accum + line
         }.size
 
-        val now = System.currentTimeMillis()
         val lines = my_utils.getLines(file.getAbsolutePath).iterator
-        println("Loading hashes...")
 
         // calculate exactly how many bits this count needs
         // so our estimations are correct
         val numBits = math.ceil(math.log10(actualUnique)/math.log10(2)).toInt
+        println("Loading hashes...")
         val flajolet_Martin = new Flajolet_Martin(lines, numBits, utils.hashes)
-
-        println(s"Hashes loaded. Took ${(System.currentTimeMillis() - now) / 1000} seconds.")
 
         val flaj_summary = flajolet_Martin.summarize(10)
 

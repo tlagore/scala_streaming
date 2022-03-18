@@ -2,10 +2,11 @@ package streams
 
 object TestUtils {
   def runTest(testMsg: String, test: () => Unit): Unit = {
+    val now = System.currentTimeMillis()
     println("--------------------")
     println(testMsg)
     test()
-    println("Test passed.")
+    println(s"Test passed. Took ${(System.currentTimeMillis() - now).toFloat / 1000} seconds.")
     println("--------------------")
   }
 }
