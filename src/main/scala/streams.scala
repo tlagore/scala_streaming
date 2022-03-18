@@ -134,15 +134,13 @@ package streams {
       }).fold(List.fill(hashes.length)(0.0))(reduceHashes)
     }).reduce(reduceHashes)
 
-//    val hashCounts: List[Double] = s.to(LazyList).foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
+//    private[this] val hashCounts: List[Double] = s.foldLeft(List.fill(hashes.length)(0.0))((curCounts, el) => {
 //        val newCounts = hashes
 //          .map(_(el) & bitMask)
 //          .map(tailLength(_,0))
 //          .map(math.pow(2, _))
 //
-//        curCounts.zip(newCounts).map {
-//          case (el1, el2) => math.max(el1,el2)
-//        }
+//        reduceHashes(curCounts, newCounts)
 //      })
 
     /**
