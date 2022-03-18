@@ -6,6 +6,8 @@ object TestUtils {
     println("--------------------")
     println(testMsg)
     test()
+
+    // we assume the test will throw exception if it fails, if we get here it passed
     println(s"Test passed. Took ${(System.currentTimeMillis() - now).toFloat / 1000} seconds.")
     println("--------------------")
   }
