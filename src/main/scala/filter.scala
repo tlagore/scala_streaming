@@ -5,7 +5,7 @@ object FilterMain extends App {
 
   /*
     NOTE ON THESE TESTS: Due to working with probabilities, these tests have the potential to fail on a test or 2.
-      - It should pass most runs.
+      - It should pass most runs (Haven't had it fail recently)
       - Of course if this were production, we would not have flaky tests ;)
    */
 
@@ -27,8 +27,12 @@ object FilterMain extends App {
     throw new IllegalArgumentException(s"Required arguments: <data_directory>")
   }
 
-  val data_path = args(0)
-  val testFiles = new java.io.File(data_path).listFiles.filter(_.isFile)
+  val data_dir = args(0)
+  val dirFile = new java.io.File(data_dir)
+  assert(dirFile.exists(), s"The supplied data directory: '$data_dir' does not exist.")
+  assert(dirFile.isDirectory, s"The supplied data directory: '$data_dir' is not a directory")
+
+  val testFiles = dirFile.listFiles.filter(_.isFile)
 
   val minFalsePos = 0.03
   val maxFalsePos = 0.15
@@ -60,13 +64,13 @@ object FilterMain extends App {
     TestUtils.runTest(s"Testing $filename, randomly generated values approach expected false positive rate",
       () =>{
         val numberTests = 1000000
-        val falsePositives = (1 to numberTests).foldLeft(0)((falsePositives, _) => {
+        val falsePositives = (1 to numberTests).foldLeft(0)((fps, _) => {
           // +1 on string size so we don't have 0 length string
           val str = if (random.nextDouble < 0.5) createRandomString(random.nextInt(35) + 1) else createRandomInt(random.nextInt(35) + 1)
           if (filter.in(str))
-            falsePositives + 1
+            fps + 1
           else
-            falsePositives
+            fps
         })
 
         val actualFalsePositiveRate = falsePositives.toDouble / numberTests

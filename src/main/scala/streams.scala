@@ -5,7 +5,7 @@ import scala.collection.mutable.BitSet
 anything, but uncomment it if you want to
 test the parallelized version (mucho zoom)
 */
-// import scala.collection.parallel.CollectionConverters._
+//import scala.collection.parallel.CollectionConverters._
 
 package streams {
 
@@ -13,9 +13,6 @@ package streams {
     def getLines(filename:String):Iterator[String] =
     {
       scala.io.Source.fromFile(filename).getLines()
-//      scala.util.Using.resource(new java.io.BufferedReader(new java.io.FileReader(filename))) { reader =>
-//        Iterator.continually(reader.readLine()).takeWhile(_ != null).toSeq
-//      }
     }
   }
 
@@ -136,7 +133,6 @@ package streams {
     // if you want to test the parallelized version, uncomment this code and the import
     // at the top of the file, and comment out the next code chunk
     // ---------------------------------------------------------------------------------
-
     // parallelized version, not allowed due to assignment specs saying no import
 //    private[this] val hashCounts: List[Double] = s.sliding(150,150).to(LazyList).par.map(s => {
 //      s.map(el => {

@@ -4,7 +4,7 @@ object CountingMain extends App {
   // process arguments
   if (args.size != 1) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Arguments missing: <data path>")
+    throw new IllegalArgumentException(s"Arguments missing: <data path>. Tests will iterate all files immediately under this data directory.")
   }
 
   /*
@@ -13,8 +13,13 @@ object CountingMain extends App {
 
   println("Testing Flajolet Martin distinct elements algorithm. NOTE: These tests may take a couple minutes.")
 
-  val fileDirectory = args(0)
-  val testFiles = new java.io.File(fileDirectory).listFiles.filter(_.isFile)
+  val data_dir = args(0)
+  val dirFile = new java.io.File(data_dir)
+  assert(dirFile.exists(), s"The supplied data directory: '$data_dir' does not exist.")
+  assert(dirFile.isDirectory, s"The supplied data directory: '$data_dir' is not a directory")
+
+  val testFiles = dirFile.listFiles.filter(_.isFile)
+
   println(s"Found files:")
   testFiles.foreach(println(_))
 
@@ -51,9 +56,9 @@ object CountingMain extends App {
   })
 
   (1 to 10).foreach(numBits => {
-    TestUtils.runTest(s"Testing that number of bits are respected with bits $numBits on 'data/who-movies.txt'",
+    TestUtils.runTest(s"Testing that number of bits are respected with bits $numBits on '$data_dir/4096.ints'",
       () => {
-        val lines = my_utils.getLines("data/who-movies.txt")
+        val lines = my_utils.getLines(s"$data_dir/4096.ints")
         val flajolet_Martin = new Flajolet_Martin(lines, numBits, utils.hashes)
         val flaj_summary = flajolet_Martin.summarize(10)
         assert(flaj_summary < math.pow(2, 16))
