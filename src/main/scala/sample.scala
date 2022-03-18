@@ -18,7 +18,7 @@ object SampleMain extends App {
   // process arguments
   if (args.length != 1) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Arguments missing <data_directory>")
+    throw new IllegalArgumentException(s"Arguments missing <data_directory>. Tests will iterate all files immediately under this data directory.")
   }
   val data_dir: String = args(0)
   val dirFile = new java.io.File(data_dir)

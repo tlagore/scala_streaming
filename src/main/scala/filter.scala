@@ -24,7 +24,7 @@ object FilterMain extends App {
   // process arguments
   if (args.length != 1) {
     args.foreach(println)
-    throw new IllegalArgumentException(s"Required arguments: <data_directory>")
+    throw new IllegalArgumentException(s"Required arguments: <data_directory>. Tests will iterate all files immediately under this data directory.")
   }
 
   val data_dir = args(0)
